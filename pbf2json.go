@@ -144,6 +144,7 @@ func run(d *osmpbf.Decoder, db *leveldb.DB, config settings) {
 
 					// skip ways which fail to denormalize
 					if err != nil {
+                        log.Printf("Failed to process way because: %v\n", err)
 						break
 					}
 
@@ -179,10 +180,22 @@ type jsonNode struct {
 	Tags map[string]string `json:"tags"`
 }
 
+func format_tags(m map[string]string) string {
+    arr := []string{}
+    for k,v := range m {
+        key := strings.Replace(k, "\"", "\\\"", -1)
+        val := strings.Replace(v, "\"", "\\\"", -1)
+        arr = append(arr, fmt.Sprintf("\"%v\": \"%v\"", key, val))
+    }
+    return strings.Join(arr, ", ")
+}
+
 func onNode(node *osmpbf.Node) {
 	marshall := jsonNode{node.ID, "node", node.Lat, node.Lon, node.Tags}
-	json, _ := json.Marshal(marshall)
-	fmt.Println(string(json))
+	//json, _ := json.Marshal(marshall)
+	//fmt.Println(string(json))
+    m := marshall
+    fmt.Printf("{ \"type\": \"Feature\", \"geometry\": { \"type\": \"Point\", \"coordinates\": [ %v, %v ] }, \"properties\": { %v } }\n", m.Lon, m.Lat, format_tags(m.Tags))
 }
 
 type jsonWay struct {
@@ -303,6 +316,7 @@ func openLevelDB(path string) *leveldb.DB {
 
 // check tags contain features from a whitelist
 func matchTagsAgainstCompulsoryTagList(tags map[string]string, tagList []string) bool {
+    return true
 	for _, name := range tagList {
 
 		feature := strings.Split(name, "~")
@@ -326,6 +340,7 @@ func matchTagsAgainstCompulsoryTagList(tags map[string]string, tagList []string)
 
 // check tags contain features from a groups of whitelists
 func containsValidTags(tags map[string]string, group map[string][]string) bool {
+    return true
 	for _, list := range group {
 		if matchTagsAgainstCompulsoryTagList(tags, list) {
 			return true
@@ -345,6 +360,7 @@ func trimTags(tags map[string]string) map[string]string {
 
 // check if a tag list is empty or not
 func hasTags(tags map[string]string) bool {
+    return true
 	n := len(tags)
 	if n == 0 {
 		return false
