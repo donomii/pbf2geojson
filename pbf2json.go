@@ -195,7 +195,9 @@ func onNode(node *osmpbf.Node) {
 	//json, _ := json.Marshal(marshall)
 	//fmt.Println(string(json))
     m := marshall
-    fmt.Printf("{ \"type\": \"Feature\", \"geometry\": { \"type\": \"Point\", \"coordinates\": [ %v, %v ] }, \"properties\": { %v } }\n", m.Lon, m.Lat, format_tags(m.Tags))
+    fmt.Printf("{ \"type\": \"Feature\", \"geometry\": { \"type\": \"Point\", \"coordinates\": [ %v, %v ] }", m.Lon, m.Lat)
+    if len(m.Tags)>0 {fmt.Printf(", \"properties\": { %v }", format_tags(m.Tags))}
+    fmt.Printf(" }\n")
 }
 
 type jsonWay struct {
@@ -317,25 +319,6 @@ func openLevelDB(path string) *leveldb.DB {
 // check tags contain features from a whitelist
 func matchTagsAgainstCompulsoryTagList(tags map[string]string, tagList []string) bool {
     return true
-	for _, name := range tagList {
-
-		feature := strings.Split(name, "~")
-		foundVal, foundKey := tags[feature[0]]
-
-		// key check
-		if !foundKey {
-			return false
-		}
-
-		// value check
-		if len(feature) > 1 {
-			if foundVal != feature[1] {
-				return false
-			}
-		}
-	}
-
-	return true
 }
 
 // check tags contain features from a groups of whitelists
@@ -361,11 +344,6 @@ func trimTags(tags map[string]string) map[string]string {
 // check if a tag list is empty or not
 func hasTags(tags map[string]string) bool {
     return true
-	n := len(tags)
-	if n == 0 {
-		return false
-	}
-	return true
 }
 
 // compute the centroid of a way
